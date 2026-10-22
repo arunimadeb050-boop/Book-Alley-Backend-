@@ -192,7 +192,7 @@ func userProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // PUT /profile
-// Body: {"name": "Rahul K", "bio": "I love sci-fi", "city": "Mumbai"}
+// Body: {"name": "Arunima", "bio": "I love sci-fi", "city": "Moulvibazar"}
 func updateProfileHandler(w http.ResponseWriter, r *http.Request) {
 	userID, err := getLoggedInUserID(r)
 	if err != nil {
