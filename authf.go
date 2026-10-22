@@ -84,7 +84,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
 
 
 // POST /login
-// Body: {"email": "rahul@mail.com", "password": "secret123"}
+// Body: {"email": "Arunima@mail.com", "password": "secret123"}
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Email    string `json:"email"`
