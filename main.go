@@ -6,7 +6,8 @@ import(
 )
 
 func main (){
-	
+	connectDatabase()
+	defer db.Close()
 
 
 	// authentication and profile 
@@ -16,5 +17,11 @@ func main (){
 	http.HandleFunc("PUT /profile", updateProfileHandler)
 	http.HandleFunc("GET /users/{id}", userProfileHandler)
 
-	
+	// ---- Books: browse, search, filter ----
+	http.HandleFunc("GET /books", getAllBooksHandler)
+	http.HandleFunc("GET /books/{id}", getOneBookHandler)
+	http.HandleFunc("POST /books", addBookHandler)
+	http.HandleFunc("PUT /books/{id}", updateBookHandler)
+	http.HandleFunc("DELETE /books/{id}", deleteBookHandler)
+	http.HandleFunc("GET /my/books", myBooksHandler)
 }
