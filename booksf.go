@@ -16,7 +16,7 @@ type scanner interface{
 }
 
 
-// scanBook copies one database row into a Book struct(wil be created later in other file ).
+// scanBook copies one database row into a Book struct
 func scanBook(s scanner) (Book, error) {
 	var b Book
 	err := s.Scan(&b.ID, &b.Title, &b.Author, &b.Genre, &b.Description,
@@ -114,6 +114,170 @@ func getAllBooksHandler(w http.ResponseWriter, r *http.Request) {
 	query += " ORDER BY b.id DESC" // newest first
 
 	rows, err := db.Query(query, args...)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "could not load books")
+		return
+	}
+	sendJSON(w, http.StatusOK, readBooks(rows))
+}
+
+
+func getOneBookHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := getIDFromURL(r, "id")
+	if err != nil {
+		sendError(w, http.StatusBadRequest, "book id must be a number")
+		return
+	}
+	book, err := getBookByID(id)
+	if err != nil {
+		sendError(w, http.StatusNotFound, "book not found")
+		return
+	}
+	sendJSON(w, http.StatusOK, book)
+}
+
+// POST /books  (login needed)
+// Body: {"title":"Dune","author":"Frank Herbert","genre":"Sci-Fi","description":"...",
+//        "for_lend":true,"for_sale":true,"price":250}
+func addBookHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := getLoggedInUserID(r)
+	if err != nil {
+		sendError(w, http.StatusUnauthorized, "Please log in to continue")
+		return
+	}
+
+	var input BookInput
+	if err := readJSON(r, &input); err != nil {
+		sendError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if msg := validateBookInput(input); msg != "" {
+		sendError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if !input.ForSale {
+		input.Price = 0 // price only matters for books that are sold
+	}
+
+	result, err := db.Exec(`INSERT INTO books
+		(title, author, genre, description, owner_id, for_lend, for_sale, price)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		input.Title, input.Author, input.Genre, input.Description,
+		userID, input.ForLend, input.ForSale, input.Price)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "could not save book")
+		return
+	}
+
+	id, _ := result.LastInsertId()
+	book, _ := getBookByID(int(id))
+	sendJSON(w, http.StatusCreated, book)
+}
+
+// PUT /books/{id}  (owner only, book must be available)
+func updateBookHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := getLoggedInUserID(r)
+	if err != nil {
+		sendError(w, http.StatusUnauthorized, "Please log in to edit your book")
+		return
+	}
+	id, err := getIDFromURL(r, "id")
+	if err != nil {
+		sendError(w, http.StatusBadRequest, "book id must be a number")
+		return
+	}
+
+	book, err := getBookByID(id)
+	if err != nil {
+		sendError(w, http.StatusNotFound, "book not found")
+		return
+	}
+	if book.OwnerID != userID {
+		sendError(w, http.StatusForbidden, "you can only edit your own books")
+		return
+	}
+	if book.Status != "available" {
+		sendError(w, http.StatusBadRequest, "you can't edit a book that is borrowed or sold")
+		return
+	}
+
+	var input BookInput
+	if err := readJSON(r, &input); err != nil {
+		sendError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if msg := validateBookInput(input); msg != "" {
+		sendError(w, http.StatusBadRequest, msg)
+		return
+	}
+	if !input.ForSale {
+		input.Price = 0
+	}
+
+	_, err = db.Exec(`UPDATE books SET title=?, author=?, genre=?, description=?,
+		for_lend=?, for_sale=?, price=? WHERE id=?`,
+		input.Title, input.Author, input.Genre, input.Description,
+		input.ForLend, input.ForSale, input.Price, id)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "could not update book")
+		return
+	}
+
+	updated, _ := getBookByID(id)
+	sendJSON(w, http.StatusOK, updated)
+}
+
+
+// DELETE /books/{id}  (owner only, book must be available)
+func deleteBookHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := getLoggedInUserID(r)
+	if err != nil {
+		sendError(w, http.StatusUnauthorized, "Please log in to delete your book")
+		return
+	}
+	id, err := getIDFromURL(r, "id")
+	if err != nil {
+		sendError(w, http.StatusBadRequest, "book id must be a number")
+		return
+	}
+
+	book, err := getBookByID(id)
+	if err != nil {
+		sendError(w, http.StatusNotFound, "book not found")
+		return
+	}
+	if book.OwnerID != userID {
+		sendError(w, http.StatusForbidden, "you can only delete your own books")
+		return
+	}
+	if book.Status != "available" {
+		sendError(w, http.StatusBadRequest, "you can't delete a book that is borrowed or sold")
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM cart_items WHERE book_id = ?", id)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "could not remove book from carts")
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM books WHERE id = ?", id)
+	if err != nil {
+		sendError(w, http.StatusInternalServerError, "could not delete book")
+		return
+	}
+
+	sendJSON(w, http.StatusOK, map[string]string{"message": "book deleted"})
+}
+
+// GET /my/books  -> all books I listed
+func myBooksHandler(w http.ResponseWriter, r *http.Request) {
+	userID, err := getLoggedInUserID(r)
+	if err != nil {
+		sendError(w, http.StatusUnauthorized, "Please log in to see your books")
+		return
+	}
+	rows, err := db.Query("SELECT "+bookColumns+" FROM books b WHERE b.owner_id = ? ORDER BY b.id DESC", userID)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "could not load books")
 		return
