@@ -15,9 +15,9 @@ import (
 // Body : {"name": "Arunima", "email": "Arunima@gmail.com", "password": "secret123"}
 func registerHandler(w http.ResponseWriter, r *http.Request){
 	type userinput struct{
-		Name string `json : "name"`
-		Email string `json : "email"`
-		Password string `json : "password"`
+		Name string `json:"name"`
+		Email string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	var input userinput

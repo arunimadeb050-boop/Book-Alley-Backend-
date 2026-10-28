@@ -1,0 +1,101 @@
+/* ---------- COLORS (change these to restyle the whole site) ---------- */
+:root {
+  --bg: #f4ecd8;
+  --surface: #ece0c0;
+  --text: #2e2011;
+  --text-soft: #5d4425;
+  --accent: #6b4f2a;
+  --border: #b79f6f;
+}
+
+/* Dark gold theme: set data-theme="dark" on the <html> tag to try it */
+[data-theme="dark"] {
+  --bg: #14100a;
+  --surface: #1c150c;
+  --text: #f0d488;
+  --text-soft: #c9a962;
+  --accent: #c9a227;
+  --border: #5c4a1e;
+}
+
+/* ---------- BASE ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'EB Garamond', serif;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, .logo { font-family: 'Playfair Display', serif; }
+
+.wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px; }
+.section { padding: 40px 0; }
+.section-title { text-align: center; margin-bottom: 28px; }
+
+/* ---------- HEADER ---------- */
+header { border-bottom: 1px solid var(--border); padding: 18px 0; }
+.header-inner { display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 24px; font-weight: 600; }
+.logo span { color: var(--accent); }
+nav a { margin-left: 24px; text-decoration: none; color: var(--text-soft); }
+nav a:hover { color: var(--accent); }
+.theme-btn {
+  margin-left: 24px; padding: 6px 14px;
+  border: 1px solid var(--accent); background: transparent;
+  color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer;
+}
+.theme-btn:hover { background: var(--surface); }
+
+/* ---------- HERO ---------- */
+.hero { text-align: center; padding: 70px 0 40px; }
+.hero h1 { font-size: 42px; margin: 0 0 12px; line-height: 1.2; }
+.sub { color: var(--text-soft); font-style: italic; margin-bottom: 28px; }
+
+.search { display: flex; max-width: 460px; margin: 0 auto; border: 1px solid var(--accent); }
+.search input {
+  flex: 1; border: none; background: var(--surface); color: var(--text);
+  padding: 12px 14px; font-family: inherit; font-size: 16px; outline: none;
+}
+.search button {
+  border: none; background: var(--accent); color: var(--bg);
+  padding: 0 22px; font-family: inherit; font-size: 15px; cursor: pointer;
+}
+
+/* ---------- BUTTONS ---------- */
+.btn {
+  display: inline-block; padding: 9px 20px; margin: 4px;
+  border: 1px solid var(--accent); color: var(--text);
+  text-decoration: none; font-size: 15px;
+}
+.btn.solid { background: var(--accent); color: var(--bg); }
+
+/* ---------- TWO OPTIONS ---------- */
+.paths { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.path { border: 1px solid var(--accent); background: var(--surface); padding: 26px; text-align: center; }
+.path h2 { margin-top: 0; }
+.path p { color: var(--text-soft); }
+
+/* ---------- BOOK GRID ---------- */
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.card { border: 1px solid var(--border); background: var(--surface); padding: 14px; }
+.cover {
+  height: 140px; margin-bottom: 12px; border: 1px solid var(--accent);
+  display: flex; align-items: center; justify-content: center; color: var(--text-soft);
+}
+.card h3 { font-size: 16px; margin: 0 0 4px; }
+.author { color: var(--text-soft); font-style: italic; font-size: 14px; margin: 0 0 8px; }
+.tag { font-size: 12px; border: 1px solid var(--accent); padding: 2px 10px; color: var(--accent); }
+
+/* ---------- FOOTER ---------- */
+footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; color: var(--text-soft); font-size: 14px; }
+
+/* ---------- MOBILE ---------- */
+@media (max-width: 720px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .paths { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 32px; }
+}

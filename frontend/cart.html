@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Your cart — LibShare</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/borrow.css"><link rel="stylesheet" href="css/extra.css"></head>
+<body>
+  <header><div class="wrap header-inner"><div class="logo">Book<span>Alley</span></div><nav><a href="index.html">Home</a><a href="browse.html">Browse</a><a href="login.html">Login</a><button class="theme-btn" id="themeToggle">Dark mode</button></nav></div></header>
+  <section class="section"><div class="wrap"><div class="page">
+    <h1 class="page-title">Your cart</h1>
+    <div id="items"></div>
+    <p class="total" id="total"></p>
+    <p class="note" id="note"></p>
+    <button class="btn solid" id="checkoutBtn" style="display:none">Checkout</button>
+  </div></div></section>
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+  <script src="js/app.js"></script>
+  <script>
+    // NEW PAGE. Backend: GET /cart, DELETE /cart/{bookId}, POST /checkout
+    if (requireLogin()) load();
+    const note = document.getElementById('note');
+
+    async function load() {
+      const r = await api('/cart');
+      if (r.status === 401) { location.href = 'login.html'; return; }
+      const items = (r.data && r.data.items) || [];
+      document.getElementById('items').innerHTML = items.length ? items.map(b => `
+        <div class="row">
+          <div class="info"><strong>${esc(b.title)}</strong><p>${esc(b.author)}</p></div>
+          <span>৳ ${Number(b.price).toLocaleString('en-US')}</span>
+          <div class="btns"><button data-remove="${b.id}">Remove</button></div>
+        </div>`).join('') : '<p>Your cart is empty. <a href="buy.html">Find a book to buy</a>.</p>';
+      document.getElementById('total').textContent = items.length ? 'Total: ৳ ' + Number(r.data.total).toLocaleString('en-US') : '';
+      document.getElementById('checkoutBtn').style.display = items.length ? 'inline-block' : 'none';
+    }
+
+    document.getElementById('items').addEventListener('click', async (e) => {
+      const id = e.target.dataset.remove;
+      if (!id) return;
+      await api('/cart/' + id, 'DELETE');
+      load();
+    });
+
+    document.getElementById('checkoutBtn').addEventListener('click', async () => {
+      const r = await api('/checkout', 'POST');
+      if (!r.ok) { note.textContent = (r.data && r.data.error) || 'Checkout failed.'; return; }
+      location.href = 'orders.html'; // order placed -> show it
+    });
+  </script>
+</body>
+</html>

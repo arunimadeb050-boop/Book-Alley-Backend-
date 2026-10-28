@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — LibShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="wrap header-inner">
+      <div class="logo">Book<span>Alley</span></div>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Home</a>
+        <button class="theme-btn" id="themeToggle">Light mode</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="auth-container">
+    <div class="auth-grid">
+      <div class="auth-card">
+        <h2 class="card-title">Login</h2>
+        <form class="auth-form" id="loginForm">
+          <label class="form-group">
+            <span class="label-text">Email</span>
+            <!-- CHANGED: added id="loginEmail" -->
+            <input type="email" id="loginEmail" class="form-input" required placeholder="you@example.com">
+          </label>
+          <label class="form-group">
+            <span class="label-text">Password</span>
+            <!-- CHANGED: added id="loginPassword" -->
+            <input type="password" id="loginPassword" class="form-input" required placeholder="••••••••">
+          </label>
+
+          <p class="auth-error" id="loginError">Please check your email and password.</p>
+
+          <button type="submit" class="auth-btn">Log in</button>
+          <p class="auth-switch">Don't have an account? <a href="signup.html">Sign up</a></p>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- CHANGED: shared helpers; theme code removed from this page -->
+  <script src="js/app.js"></script>
+  <script>
+    // CHANGED: async, and sends the login to POST /login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const error = document.getElementById('loginError');
+      const r = await api('/login', 'POST', {
+        email: document.getElementById('loginEmail').value,
+        password: document.getElementById('loginPassword').value
+      });
+      if (!r.ok) {
+        error.textContent = (r.data && r.data.error) || 'Please check your email and password.';
+        error.style.display = 'block';
+        return;
+      }
+      // CHANGED: save the token. Every later request sends it (see api() in js/app.js)
+      localStorage.setItem('token', r.data.token);
+      location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,27 +1,61 @@
-package main 
+package main
 
-import(
+import (
 	"fmt"
 	"net/http"
+	"log"
 )
 
-func main (){
-	connectDatabase()
+func main() {
+	if len(jwtSecret) == 0 {
+       log.Fatal("JWT_SECRET is not set")
+   }
+
+
+
+	connectDatabase() // opens bookshare.db and creates tables if needed
 	defer db.Close()
 
+	mux := http.NewServeMux()
 
-	// authentication and profile 
-	http.HandleFunc("POST /register", registerHandler)
-	http.HandleFunc("POST /login", loginHandler)
-	http.HandleFunc("GET /profile", myProfileHandler)
-	http.HandleFunc("PUT /profile", updateProfileHandler)
-	http.HandleFunc("GET /users/{id}", userProfileHandler)
+	// ---- Auth & Profile ----
+	mux.HandleFunc("POST /register", registerHandler)
+	mux.HandleFunc("POST /login", loginHandler)
+	mux.HandleFunc("GET /profile", myProfileHandler)
+	mux.HandleFunc("PUT /profile", updateProfileHandler)
+	mux.HandleFunc("GET /users/{id}", userProfileHandler)
 
 	// ---- Books: browse, search, filter ----
-	http.HandleFunc("GET /books", getAllBooksHandler)
-	http.HandleFunc("GET /books/{id}", getOneBookHandler)
-	http.HandleFunc("POST /books", addBookHandler)
-	http.HandleFunc("PUT /books/{id}", updateBookHandler)
-	http.HandleFunc("DELETE /books/{id}", deleteBookHandler)
-	http.HandleFunc("GET /my/books", myBooksHandler)
+	mux.HandleFunc("GET /books", getAllBooksHandler)
+	mux.HandleFunc("GET /books/{id}", getOneBookHandler)
+	mux.HandleFunc("POST /books", addBookHandler)
+	mux.HandleFunc("PUT /books/{id}", updateBookHandler)
+	mux.HandleFunc("DELETE /books/{id}", deleteBookHandler)
+	mux.HandleFunc("GET /my/books", myBooksHandler)
+
+	// ---- Borrow request & approval workflow ----
+	mux.HandleFunc("POST /books/{id}/request", requestBookHandler)
+	mux.HandleFunc("GET /requests/incoming", incomingRequestsHandler)
+	mux.HandleFunc("GET /requests/outgoing", outgoingRequestsHandler)
+	mux.HandleFunc("POST /requests/{id}/approve", approveRequestHandler)
+	mux.HandleFunc("POST /requests/{id}/reject", rejectRequestHandler)
+	mux.HandleFunc("POST /requests/{id}/return", returnRequestHandler)
+
+	// ---- Cart & checkout (buying books) ----
+	mux.HandleFunc("POST /cart/{bookId}", addToCartHandler)
+	mux.HandleFunc("DELETE /cart/{bookId}", removeFromCartHandler)
+	mux.HandleFunc("GET /cart", viewCartHandler)
+	mux.HandleFunc("POST /checkout", checkoutHandler)
+	mux.HandleFunc("GET /orders", myOrdersHandler)
+
+	// ---- Ratings / reputation ----
+	mux.HandleFunc("POST /users/{id}/review", addReviewHandler)
+
+	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
+
+	fmt.Println("BookShare server running on http://localhost:8080")
+	err := http.ListenAndServe(":8080", withCORS(mux))
+	if err != nil {
+		fmt.Println("server error:", err)
+	}
 }

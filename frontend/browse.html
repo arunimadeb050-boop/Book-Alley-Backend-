@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Browse Books — LibShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- NEW PAGE. Reuses borrow.css, which already styles .toolbar, .book-grid and .book-card -->
+  <link rel="stylesheet" href="css/borrow.css">
+</head>
+<body>
+  <header>
+    <div class="wrap header-inner">
+      <div class="logo">Book<span>Alley</span></div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="browse.html">Browse</a>
+        <a href="login.html">Login</a>
+        <button class="theme-btn" id="themeToggle">Dark mode</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <h1 class="page-title">Browse all books</h1>
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="Search by title or author">
+        <input type="text" id="genre" placeholder="Genre, e.g. Fiction">
+        <select id="type">
+          <option value="">Lend and sale</option>
+          <option value="lend">Only for lending</option>
+          <option value="sale">Only for sale</option>
+        </select>
+      </div>
+      <div class="book-grid" id="grid"></div>
+      <p class="empty" id="empty" style="display:none">No books match your search.</p>
+    </div>
+  </section>
+
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const search = document.getElementById('search');
+    const genre = document.getElementById('genre');
+    const type = document.getElementById('type');
+    // CHANGED: the home page search box sends people here as browse.html?search=... so fill the box from the URL
+    search.value = new URLSearchParams(location.search).get('search') || '';
+
+    // The filters are sent to the backend, which does the searching:
+    // GET /books?search=...&genre=...&type=lend|sale
+    async function load() {
+      const params = new URLSearchParams();
+      if (search.value.trim()) params.set('search', search.value.trim());
+      if (genre.value.trim()) params.set('genre', genre.value.trim());
+      if (type.value) params.set('type', type.value);
+      const r = await api('/books?' + params.toString());
+      const list = r.ok ? r.data : [];
+
+      grid.innerHTML = list.map(b => `
+        <article class="book-card">
+          <div class="cover"><span>${esc(b.title.charAt(0))}</span></div>
+          <h3>${esc(b.title)}</h3>
+          <p class="author">${esc(b.author)}</p>
+          <div class="meta">
+            <span class="badge">${esc(b.genre || 'Book')}</span>
+            <span>${b.status !== 'available' ? esc(b.status) : (b.for_sale ? '৳ ' + Number(b.price).toLocaleString('en-US') : 'Free to borrow')}</span>
+          </div>
+          <a class="btn" href="book.html?id=${b.id}">View book</a>
+        </article>`).join('');
+      empty.style.display = list.length ? 'none' : 'block';
+    }
+
+    // Wait 300ms after typing so we don't call the server on every key press
+    let timer;
+    const later = () => { clearTimeout(timer); timer = setTimeout(load, 300); };
+    search.addEventListener('input', later);
+    genre.addEventListener('input', later);
+    type.addEventListener('change', load);
+    load();
+  </script>
+</body>
+</html>

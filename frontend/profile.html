@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Profile — LibShare</title><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/borrow.css"><link rel="stylesheet" href="css/extra.css"></head>
+<body>
+  <header><div class="wrap header-inner"><div class="logo">Book<span>Alley</span></div><nav><a href="index.html">Home</a><a href="browse.html">Browse</a><a href="login.html">Login</a><button class="theme-btn" id="themeToggle">Dark mode</button></nav></div></header>
+  <section class="section"><div class="wrap"><div class="page">
+    <div id="profile"><p>Loading…</p></div>
+    <div id="mine"></div>
+    <div id="reviewBox"></div>
+    <h2>Reviews</h2>
+    <div id="reviews"></div>
+  </div></div></section>
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+  <script src="js/app.js"></script>
+  <script>
+    // NEW PAGE. profile.html = my profile (GET /profile, edit with PUT /profile, my books from GET /my/books)
+    //           profile.html?id=5 = public profile (GET /users/5) with a review form (POST /users/5/review)
+    const id = new URLSearchParams(location.search).get('id');
+    const own = !id;
+    if (own && !requireLogin()) throw new Error('login needed');
+
+    async function load() {
+      const r = await api(own ? '/profile' : '/users/' + encodeURIComponent(id));
+      if (r.status === 401) { location.href = 'login.html'; return; }
+      if (!r.ok) { document.getElementById('profile').innerHTML = '<p>' + esc((r.data && r.data.error) || 'User not found.') + '</p>'; return; }
+      const p = r.data, u = p.user;
+
+      document.getElementById('profile').innerHTML = own ? `
+        <h1 class="page-title">My profile</h1>
+        <p>${esc(u.email)} · Rating: ${p.review_count ? p.average_rating + ' / 5 (' + p.review_count + ')' : 'no reviews yet'}</p>
+        <form id="editForm">
+          <label>Name <input id="eName" value="${esc(u.name)}" required></label>
+          <label>City <input id="eCity" value="${esc(u.city)}"></label>
+          <label>Bio <textarea id="eBio" rows="3">${esc(u.bio)}</textarea></label>
+          <button class="btn solid" type="submit">Save profile</button>
+          <span class="note" id="saved"></span>
+        </form>` : `
+        <h1 class="page-title">${esc(u.name)}</h1>
+        <p>${esc(u.city)} · Rating: ${p.review_count ? p.average_rating + ' / 5 (' + p.review_count + ')' : 'no reviews yet'}</p>
+        <p>${esc(u.bio)}</p>`;
+
+      document.getElementById('reviews').innerHTML = (p.reviews || []).length ? p.reviews.map(v => `
+        <div class="row"><div class="info"><strong>${esc(v.reviewer_name)}</strong> <span class="pill">${v.rating} / 5</span>
+        <p>${esc(v.comment)}</p></div><span>${esc(v.created_at)}</span></div>`).join('') : '<p>No reviews yet.</p>';
+
+      if (own) {
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const s = await api('/profile', 'PUT', { name: document.getElementById('eName').value, bio: document.getElementById('eBio').value, city: document.getElementById('eCity').value });
+          document.getElementById('saved').textContent = s.ok ? 'Saved.' : (s.data && s.data.error) || 'Could not save.';
+        });
+        loadMine();
+      } else {
+        document.getElementById('reviewBox').innerHTML = `
+          <h2>Leave a review</h2>
+          <form id="reviewForm">
+            <label>Rating <select id="rRating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select></label>
+            <label>Comment <textarea id="rComment" rows="3"></textarea></label>
+            <button class="btn solid" type="submit">Post review</button>
+            <p class="note" id="rNote"></p>
+          </form>`;
+        document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!requireLogin()) return;
+          const s = await api('/users/' + id + '/review', 'POST', { rating: Number(document.getElementById('rRating').value), comment: document.getElementById('rComment').value });
+          // The backend only allows a review after a finished purchase or returned borrow, and says so in the error
+          document.getElementById('rNote').textContent = s.ok ? 'Thanks, your review was saved.' : (s.data && s.data.error) || 'Could not save review.';
+          if (s.ok) load();
+        });
+      }
+    }
+
+    async function loadMine() {
+      const r = await api('/my/books');
+      const list = r.ok ? r.data : [];
+      document.getElementById('mine').innerHTML = '<h2>My books</h2>' + (list.length ? list.map(b => `
+        <div class="row"><div class="info"><strong><a href="book.html?id=${b.id}">${esc(b.title)}</a></strong><p>${esc(b.author)}</p></div>
+        <span class="pill">${esc(b.status)}</span>
+        <div class="btns">${b.status === 'available' ? '<button data-del="' + b.id + '">Delete</button>' : ''}</div></div>`).join('') : '<p>You have not listed any books. <a href="lend.html">Lend</a> or <a href="sell.html">sell</a> one.</p>');
+    }
+    document.getElementById('mine').addEventListener('click', async (e) => {
+      const d = e.target.dataset.del;
+      if (!d || !confirm('Delete this book?')) return;
+      await api('/books/' + d, 'DELETE'); // DELETE /books/{id}
+      loadMine();
+    });
+    load();
+  </script>
+</body>
+</html>

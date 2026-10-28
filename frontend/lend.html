@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lend a Book — LibShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/lend.css">
+</head>
+<body>
+  <header>
+    <div class="wrap header-inner">
+      <div class="logo">Book<span>Alley</span></div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="browse.html">Browse</a>
+        <a href="login.html">Login</a>
+        <button class="theme-btn" id="themeToggle">Dark mode</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="lend-card">
+        <h1>Lend a Book</h1>
+        <form id="lendForm" autocomplete="off">
+          <label>Book title <input type="text" id="bookTitle" required></label>
+          <label>Author <input type="text" id="bookAuthor" required></label>
+          <label>Category
+            <input type="text" id="bookCategory" placeholder="e.g. Fiction, Academic, Poetry" required>
+          </label>
+          <label>Condition
+            <select id="bookCondition">
+              <option>New</option><option selected>Good</option><option>Fair</option><option>Worn</option>
+            </select>
+          </label>
+          <label>Description
+            <textarea id="bookDescription" rows="4" placeholder="A short note about the book, edition, or its condition"></textarea>
+          </label>
+          <!-- NOTE: the backend does not store cover images yet, so this file is not sent -->
+          <label>Book cover <input type="file" id="bookCover" accept="image/*"></label>
+          <label>How long can it be borrowed?
+            <select id="bookDuration">
+              <option>1 week</option><option selected>2 weeks</option><option>3 weeks</option><option>1 month</option>
+            </select>
+          </label>
+
+          <p class="form-error" id="lendError">Please fill in the required fields.</p>
+          <div class="lend-actions"><button type="submit">List Book</button></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+
+  <!-- CHANGED: shared helpers; theme code removed from this page -->
+  <script src="js/app.js"></script>
+  <script>
+    requireLogin(); // CHANGED: listing a book needs a login, so send visitors to login.html
+
+    // CHANGED: async
+    document.getElementById('lendForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const error = document.getElementById('lendError');
+      const title = document.getElementById('bookTitle').value.trim();
+      const author = document.getElementById('bookAuthor').value.trim();
+      const category = document.getElementById('bookCategory').value.trim();
+      if (!title || !author || !category) { error.textContent = 'Please fill in the required fields.'; error.style.display = 'block'; return; }
+      error.style.display = 'none';
+
+      // CHANGED: the backend has no "condition" or "duration" columns, so they are added
+      // to the description text instead. Nothing the user typed is lost.
+      const note = document.getElementById('bookDescription').value.trim();
+      const description = note + (note ? '\n' : '') +
+        'Condition: ' + document.getElementById('bookCondition').value +
+        '. Can be borrowed for: ' + document.getElementById('bookDuration').value + '.';
+
+      // CHANGED: replaced console.log with POST /books.
+      // category -> genre, type:'lend' -> for_lend:true / for_sale:false
+      const r = await api('/books', 'POST', {
+        title, author, genre: category, description,
+        for_lend: true, for_sale: false, price: 0
+      });
+      if (r.status === 401) { location.href = 'login.html'; return; }
+      if (!r.ok) { error.textContent = (r.data && r.data.error) || 'Could not list the book.'; error.style.display = 'block'; return; }
+      location.href = 'book.html?id=' + r.data.id; // CHANGED: show the new book
+    });
+  </script>
+</body>
+</html>

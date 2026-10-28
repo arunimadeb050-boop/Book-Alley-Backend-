@@ -1,0 +1,102 @@
+.theme-btn {
+  margin-left: 24px;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.theme-btn:hover { background: var(--surface); }
+
+.page-title { font-size: 28px; margin: 10px 0 20px; }
+
+/* Search bar */
+.toolbar { display: flex; gap: 12px; margin-bottom: 24px; }
+.toolbar input,
+.toolbar select {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+.toolbar input { flex: 1; }
+.toolbar input:focus,
+.toolbar select:focus { outline: none; border-color: var(--accent); }
+
+/* Book cards */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 22px;
+}
+.book-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+}
+.cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 170px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.cover img { width: 100%; height: 100%; object-fit: cover; }
+.cover span { font-family: 'Playfair Display', serif; font-size: 56px; color: var(--accent); }
+
+.book-card h3 { font-size: 18px; margin: 0 0 4px; }
+.book-card .author { margin: 0 0 12px; font-size: 14px; color: var(--text-soft); }
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--text-soft);
+}
+.badge {
+  padding: 2px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--text);
+}
+.price { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--text); }
+
+/* Button */
+.btn {
+  display: inline-block;
+  margin-top: auto;
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 15px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { opacity: 0.9; }
+
+.empty { padding: 18px 0; font-size: 15px; color: var(--text-soft); }
+
+@media (max-width: 640px) {
+  .toolbar { flex-direction: column; }
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LibShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/extra.css">
+</head>
+<body>
+  <header><div class="wrap header-inner"><div class="logo">Book<span>Alley</span></div><nav><a href="index.html">Home</a><a href="browse.html">Browse</a><a href="login.html">Login</a><button class="theme-btn" id="themeToggle">Dark mode</button></nav></div></header>
+
+  <section class="hero">
+    <div class="wrap">
+      <h1>Lend it. Borrow it.<br>Keep reading.</h1>
+      <p class="sub">Lend, borrow, buy, and sell books with readers nearby.</p>
+      <!-- CHANGED: id added; the script below sends the search to browse.html -->
+      <form class="search" id="heroSearch">
+        <input type="text" id="heroQuery" placeholder="Search by title or author">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap paths">
+      <div class="path">
+        <h2>Lend &amp; borrow</h2>
+        <p>Share a book for a few weeks, or borrow one you need.</p>
+        <a class="btn solid" href="borrow.html">Borrow a book</a>
+        <a class="btn" href="lend.html">Lend a book</a>
+      </div>
+      <div class="path">
+        <h2>Buy &amp; sell</h2>
+        <p>Sell books you have finished, or buy used copies.</p>
+        <a class="btn solid" href="buy.html">Buy a book</a>
+        <a class="btn" href="sell.html">Sell a book</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2 class="section-title">Featured books</h2>
+      <!-- CHANGED: the four fake cards were removed; the script fills this grid with the newest books -->
+      <div class="grid" id="bookGrid"></div>
+      <p id="homeEmpty" style="display:none">No books yet. Be the first to <a href="lend.html">list one</a>.</p>
+    </div>
+  </section>
+
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+
+  <script src="js/app.js"></script>
+  <script>
+    // CHANGED: home search goes to the browse page
+    document.getElementById('heroSearch').addEventListener('submit', (e) => {
+      e.preventDefault();
+      location.href = 'browse.html?search=' + encodeURIComponent(document.getElementById('heroQuery').value.trim());
+    });
+
+    // CHANGED: load real books. The backend returns newest first, so we show the first 4.
+    (async () => {
+      const r = await api('/books?available=true');
+      const list = (r.ok ? r.data : []).slice(0, 4);
+      document.getElementById('bookGrid').innerHTML = list.map(b => `
+        <a class="card" href="book.html?id=${b.id}" style="text-decoration:none;color:inherit">
+          <div class="cover">${esc(b.title.charAt(0))}</div>
+          <h3>${esc(b.title)}</h3>
+          <p class="author">${esc(b.author)}</p>
+          <span class="tag">${b.for_lend ? 'For lending' : 'For sale'}</span>
+        </a>`).join('');
+      document.getElementById('homeEmpty').style.display = list.length ? 'none' : 'block';
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Borrow a Book — LibShare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/borrow.css">
+</head>
+<body>
+  <header>
+    <div class="wrap header-inner">
+      <div class="logo">Book<span>Alley</span></div>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="browse.html">Browse</a>
+        <a href="login.html">Login</a>
+        <button class="theme-btn" id="themeToggle">Dark mode</button>
+      </nav>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="wrap">
+      <h1 class="page-title">Books available for borrowing</h1>
+      <div class="toolbar">
+        <!-- CHANGED: the "condition" dropdown was removed (the backend has no condition field) -->
+        <input type="text" id="search" placeholder="Search by title, author or category">
+      </div>
+      <div class="book-grid" id="grid"></div>
+      <p class="empty" id="empty" style="display:none">No books match your search.</p>
+    </div>
+  </section>
+
+  <footer><div class="wrap">BookAlley, a student project</div></footer>
+
+  <!-- CHANGED: shared helpers (also gives us esc()); theme code and the sample data were removed -->
+  <script src="js/app.js"></script>
+  <script>
+    const grid = document.getElementById('grid');
+    const empty = document.getElementById('empty');
+    const search = document.getElementById('search');
+    let books = [];
+
+    // CHANGED: loads real books from the backend instead of sampleBooks.
+    // Backend URL is /books?type=lend&available=true (not /api/books?...&status=available)
+    async function loadBooks() {
+      const r = await api('/books?type=lend&available=true');
+      return r.ok ? r.data : [];
+    }
+
+    function render() {
+      const q = search.value.trim().toLowerCase();
+      // CHANGED: b.category -> b.genre (the backend calls it genre)
+      const list = books.filter(b => [b.title, b.author, b.genre].join(' ').toLowerCase().includes(q));
+
+      grid.innerHTML = list.map(b => `
+        <article class="book-card">
+          <div class="cover"><span>${esc(b.title.charAt(0))}</span></div>
+          <h3>${esc(b.title)}</h3>
+          <p class="author">${esc(b.author)}</p>
+          <div class="meta">
+            <!-- CHANGED: shows genre (was condition) and "Free to borrow" (was duration) -->
+            <span class="badge">${esc(b.genre || 'Book')}</span>
+            <span>Free to borrow</span>
+          </div>
+          <a class="btn" href="book.html?id=${b.id}">View book</a>
+        </article>`).join('');
+      empty.style.display = list.length ? 'none' : 'block';
+    }
+
+    search.addEventListener('input', render);
+    loadBooks().then(data => { books = data; render(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+.theme-btn {
+  margin-left: 24px;
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.theme-btn:hover { background: var(--surface); }
+
+.lend-card {
+  max-width: 480px;
+  margin: 20px auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  padding: 30px 32px 26px;
+}
+.lend-card h1 {
+  text-align: center;
+  font-size: 24px;
+  margin: 0 0 22px;
+}
+
+#lendForm { display: flex; flex-direction: column; gap: 16px; }
+
+#lendForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+#lendForm input[type="text"],
+#lendForm select,
+#lendForm textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+#lendForm select { height: 42px; }
+#lendForm textarea { resize: vertical; min-height: 80px; }
+
+#lendForm input[type="text"]:focus,
+#lendForm select:focus,
+#lendForm textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#lendForm input[type="file"] {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-soft);
+}
+
+.form-error {
+  color: #c0564f;
+  font-size: 13px;
+  margin: -6px 0 0;
+  display: none;
+}
+
+.lend-actions { display: flex; justify-content: center; margin-top: 6px; }
+#lendForm button {
+  width: 100%;
+  max-width: 220px;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+#lendForm button:hover { opacity: 0.9; }
+
+@media (max-width: 560px) {
+  .lend-card { margin: 10px 16px; padding: 24px 20px; }
+}
