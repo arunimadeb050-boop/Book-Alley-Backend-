@@ -28,6 +28,7 @@ type Book struct {
 	ForSale     bool    `json:"for_sale"`
 	Price       float64 `json:"price"`
 	Status      string  `json:"status"`
+	Cover       string  `json:"cover"`
 }
 
 // BookInput = what the client sends when adding/editing a book
@@ -39,6 +40,7 @@ type BookInput struct {
 	ForLend     bool    `json:"for_lend"`
 	ForSale     bool    `json:"for_sale"`
 	Price       float64 `json:"price"`
+	Cover       string  `json:"cover"`
 }
 
 // BorrowRequest = "I would like to borrow your book"

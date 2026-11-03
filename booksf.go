@@ -8,7 +8,7 @@ import (
 )
 
 //columns needed for books and b is a short form for books table 
-const bookColumns="b.id, b.title, b.author , b.genre, b.description, b.owner_id, b.for_lend, b.for_sale, b.price, b.status"
+const bookColumns="b.id, b.title, b.author , b.genre, b.description, b.owner_id, b.for_lend, b.for_sale, b.price, b.status, b.cover"
 
 //scanner lets scanbook work for both a single row and a row inside a loop
 type scanner interface{
@@ -20,7 +20,7 @@ type scanner interface{
 func scanBook(s scanner) (Book, error) {
 	var b Book
 	err := s.Scan(&b.ID, &b.Title, &b.Author, &b.Genre, &b.Description,
-		&b.OwnerID, &b.ForLend, &b.ForSale, &b.Price, &b.Status)
+		&b.OwnerID, &b.ForLend, &b.ForSale, &b.Price, &b.Status, &b.Cover)
 	return b, err
 }
 
@@ -58,6 +58,10 @@ func validateBookInput(in BookInput) string {
 	}
 	if in.ForSale && in.Price <= 0 {
 		return "a book for sale needs a price greater than 0"
+	}
+
+	if in.Cover!="" && (!strings.HasPrefix(in.Cover, "data:image/") || len(in.Cover)>300000){
+		return "cover image is invalid or too large"
 	}
 	return ""
 }
@@ -160,10 +164,10 @@ func addBookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := db.Exec(`INSERT INTO books
-		(title, author, genre, description, owner_id, for_lend, for_sale, price)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		(title, author, genre, description, owner_id, for_lend, for_sale, price, cover)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		input.Title, input.Author, input.Genre, input.Description,
-		userID, input.ForLend, input.ForSale, input.Price)
+		userID, input.ForLend, input.ForSale, input.Price, input.Cover)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "could not save book")
 		return
@@ -213,11 +217,14 @@ func updateBookHandler(w http.ResponseWriter, r *http.Request) {
 	if !input.ForSale {
 		input.Price = 0
 	}
+	if input.Cover==""{
+		input.Cover=book.Cover
+	}
 
 	_, err = db.Exec(`UPDATE books SET title=?, author=?, genre=?, description=?,
-		for_lend=?, for_sale=?, price=? WHERE id=?`,
+		for_lend=?, for_sale=?, price=?, cover=? WHERE id=?`,
 		input.Title, input.Author, input.Genre, input.Description,
-		input.ForLend, input.ForSale, input.Price, id)
+		input.ForLend, input.ForSale, input.Price, input.Cover, id)
 	if err != nil {
 		sendError(w, http.StatusInternalServerError, "could not update book")
 		return

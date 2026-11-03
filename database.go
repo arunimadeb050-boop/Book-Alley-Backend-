@@ -51,7 +51,8 @@ func createTables() {
 			for_lend    INTEGER NOT NULL DEFAULT 0,
 			for_sale    INTEGER NOT NULL DEFAULT 0,
 			price       REAL NOT NULL DEFAULT 0,
-			status      TEXT NOT NULL DEFAULT 'available'
+			status      TEXT NOT NULL DEFAULT 'available',
+			cover       TEXT NOT NULL DEFAULT ''
 		)`,
 
 		// Borrow requests (status: pending / approved / rejected / returned)
