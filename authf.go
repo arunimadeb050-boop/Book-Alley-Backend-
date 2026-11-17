@@ -49,11 +49,32 @@ func registerHandler(w http.ResponseWriter, r *http.Request){
     	sendError(w, http.StatusBadRequest, "email looks invalid")
     	return
 	}
-	if len(input.Password) < 6 {
+	if len(input.Password) < 8 {
 		sendError(w, http.StatusBadRequest, "password must be at least 6 characters")
 		return
 	}
 
+	hasNumber := false
+	hasSpecial := false
+	
+	for i:=0; i<len(input.Password); i++{
+		ch := input.Password[i]
+		if ch>='0' && ch<='9'{
+			hasNumber =true 
+		}else if !(ch >='a' && ch<='z') && !(ch>='A' && ch<='Z'){
+			hasSpecial=true
+		}
+	}
+
+
+	if !hasNumber {
+		sendError(w,http.StatusBadRequest,"password must contain at least one digit")
+		return 
+	}
+	if !hasSpecial {
+		sendError(w,http.StatusBadRequest, "Password must contain at least one special character")
+		return 
+	}
 
 	var count int 
 	//if the email is already in use or not 
