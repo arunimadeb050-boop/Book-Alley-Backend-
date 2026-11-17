@@ -51,6 +51,11 @@ func main() {
 	// ---- Ratings / reputation ----
 	mux.HandleFunc("POST /users/{id}/review", addReviewHandler)
 
+	// ---- Chat ----
+	mux.HandleFunc("POST /books/{id}/messages", sendMessageHandler)
+	mux.HandleFunc("GET /books/{id}/messages", getMessagesHandler)
+	mux.HandleFunc("GET /chats", myChatsHandler)
+
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
 
 	fmt.Println("BookShare server running on http://localhost:8080")

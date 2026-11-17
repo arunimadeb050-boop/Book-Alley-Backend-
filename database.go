@@ -100,6 +100,16 @@ func createTables() {
 			created_at  TEXT NOT NULL,
 			UNIQUE(reviewer_id, reviewed_id)
 		)`,
+
+		// Chat messages (one chat = one book + one customer)
+		`CREATE TABLE IF NOT EXISTS messages (
+			id          INTEGER PRIMARY KEY AUTOINCREMENT,
+			book_id     INTEGER NOT NULL,
+			customer_id INTEGER NOT NULL,
+			sender_id   INTEGER NOT NULL,
+			text        TEXT NOT NULL,
+			created_at  TEXT NOT NULL
+		)`,
 	}
 
 	for _, statement := range tables {
